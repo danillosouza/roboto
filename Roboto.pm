@@ -27,14 +27,14 @@ sub crawl {
 		
 		# exits if theres no more links to visit
 		last unless @to_visit;
-		
-		foreach my $addr (@to_visit) {		
+
+		foreach my $addr (@to_visit) {
 			# page representation that user will use
 			my %page = (
 				addr => $addr,
 				content => $mech->content
 			);
-			
+
 			# add new links of the current page
 			foreach my $link (@links) {
 				my $tmp = $link->[0];
@@ -45,14 +45,19 @@ sub crawl {
 					$addrs{$tmp} = 0;
 				}
 			}
-			
+
 			# execute the 'user block', filtering page if any filter was given
 			if (keys %RULES) {
+				my $satisfy = 1;
+
 				while( my($config, $rule) = each %RULES) {
-					if (&$config(\%page, $rule)) {
-						&$callback(\%page);
+					unless (&$config(\%page, $rule)) {
+						$satisfy = 0;
+						last;
 					}
 				}
+
+				&$callback(\%page) if $satisfy;
 			}
 			else {
 				&$callback(\%page);
